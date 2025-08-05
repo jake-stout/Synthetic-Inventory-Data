@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import logging
 from datetime import datetime, timedelta
 from uuid import uuid4
 
@@ -39,8 +40,13 @@ def get_connection():
 
 def load_table(conn, sql, data):
     with conn.cursor() as cur:
-        execute_batch(cur, sql, data)
-    conn.commit()
+        try:
+            execute_batch(cur, sql, data)
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            logging.exception("Error executing batch for SQL: %s", sql)
+            raise
 
 
 # ---------------------------------------------------------------------------
