@@ -5,10 +5,7 @@ import uuid
 import random
 from datetime import datetime
 
-from faker import Faker
 from confluent_kafka import Producer
-
-fake = Faker()
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "inventory_transactions")
@@ -71,3 +68,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

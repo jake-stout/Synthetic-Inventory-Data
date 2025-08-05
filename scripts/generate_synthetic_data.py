@@ -191,15 +191,14 @@ def generate_transactions(parts, facilities, work_orders, users, count=1000):
             quantity = qty
             inventory[key] = on_hand - qty
         elif t_type == "ADJUSTMENT":
-            # small adjustments up or down but never negative
+            # small adjustments up or down but never negative inventory
             adj = random.randint(-2, 2)
             if on_hand + adj < 0:
                 adj = -on_hand
-            quantity = abs(adj)
-            t_type = "ADJUSTMENT" if adj >= 0 else "ADJUSTMENT"
+            quantity = adj
             inventory[key] = on_hand + adj
         elif t_type in ("TRANSFER_IN", "TRANSFER_OUT"):
-            # to ensure paired transfers, generate TRANSFER_OUT then TRANSFER_IN
+            # to ensure paired transfers, generate TRANSFER_IN then TRANSFER_OUT
             if on_hand == 0:
                 continue
             qty = min(quantity, on_hand)
