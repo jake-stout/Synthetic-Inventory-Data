@@ -1,22 +1,26 @@
 version: '3.8'
 
-services:
-  postgres:
-    image: postgres:15
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - ./db/inventory_ddl.sql:/docker-entrypoint-initdb.d/inventory_ddl.sql
+networks:
+  streaming:
+    driver: bridge
 
+volumes:
+  zookeeper_data:
+  zookeeper_log:
+  kafka_data:
+  postgres_data:
+
+services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+    networks:
+      - streaming
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -27,8 +31,27 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - streaming
+
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-inventory}
+      POSTGRES_USER: ${DB_USER:-inventory}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-inventory}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/inventory_ddl.sql:/docker-entrypoint-initdb.d/inventory_ddl.sql
+    networks:
+      - streaming
 
   jobmanager:
     image: flink:1.17.1-scala_2.12-java11
@@ -36,48 +59,42 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - |-
+      - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
     depends_on:
       - kafka
       - postgres
+    networks:
+      - streaming
 
   taskmanager:
     image: flink:1.17.1-scala_2.12-java11
     command: taskmanager
-    depends_on:
-      - jobmanager
     environment:
-      - |-
+      - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
-
-  producer:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.producer
     depends_on:
-      - kafka
+      - jobmanager
+    networks:
+      - streaming
+
+  api:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./api:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-inventory}
+      DB_USER: ${DB_USER:-inventory}
+      DB_PASSWORD: ${DB_PASSWORD:-inventory}
+    depends_on:
       - postgres
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-
-  flink-app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.flink
-    depends_on:
-      - taskmanager
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8000:8000"
+    networks:
+      - streaming
