@@ -8,7 +8,7 @@ from psycopg2.pool import SimpleConnectionPool
 from fastapi import FastAPI, Query
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = int(os.getenv("DB_PORT", "5432"))
+DB_PORT = int(os.getenv("DB_PORT", "54321"))
 DB_NAME = os.getenv("DB_NAME", "inventory")
 DB_USER = os.getenv("DB_USER", "inventory")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "inventory")
