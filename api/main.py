@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2.pool import SimpleConnectionPool
 from fastapi import FastAPI, Query
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -15,8 +16,15 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "inventory")
 app = FastAPI()
 
 
-def get_connection():
-    return psycopg2.connect(
+pool: Optional[SimpleConnectionPool] = None
+
+
+@app.on_event("startup")
+def startup() -> None:
+    global pool
+    pool = SimpleConnectionPool(
+        minconn=1,
+        maxconn=10,
         host=DB_HOST,
         port=DB_PORT,
         dbname=DB_NAME,
@@ -25,12 +33,19 @@ def get_connection():
     )
 
 
+@app.on_event("shutdown")
+def shutdown() -> None:
+    if pool:
+        pool.closeall()
+
+
 @app.get("/transactions")
 def read_transactions(
     warehouse: Optional[str] = Query(default=None),
     start_date: Optional[datetime] = Query(default=None),
 ):
-    conn = get_connection()
+    assert pool is not None
+    conn = pool.getconn()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             query = "SELECT * FROM streamed_transactions"
@@ -48,4 +63,4 @@ def read_transactions(
             cur.execute(query, params)
             return cur.fetchall()
     finally:
-        conn.close()
+        pool.putconn(conn)
