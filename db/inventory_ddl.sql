@@ -71,3 +71,21 @@ CREATE TABLE inventory_on_hand (
     last_updated TIMESTAMP,
     PRIMARY KEY (part_number, lot_number, warehouse, bin)
 );
+
+-- Table for storing raw streamed transactions from Kafka
+CREATE TABLE streamed_transactions (
+    transaction_id UUID PRIMARY KEY,
+    transaction_type VARCHAR,
+    part_number VARCHAR,
+    lot_number VARCHAR,
+    warehouse VARCHAR,
+    bin VARCHAR,
+    source_facility VARCHAR,
+    destination_facility VARCHAR,
+    quantity INTEGER,
+    unit_cost NUMERIC(10,2),
+    total_cost NUMERIC(12,2),
+    work_order_number VARCHAR,
+    transaction_timestamp TIMESTAMP,
+    created_by INTEGER
+);

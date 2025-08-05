@@ -3,3 +3,5 @@ psycopg2-binary
 confluent-kafka
 pyflink
 python-dotenv
+fastapi
+uvicorn
