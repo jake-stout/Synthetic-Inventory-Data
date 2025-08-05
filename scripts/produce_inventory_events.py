@@ -18,10 +18,18 @@ def delivery_report(err, msg):
 
 def main():
     producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
-    with open(EVENT_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            producer.produce(KAFKA_TOPIC, line.strip(), callback=delivery_report)
-            producer.poll(0)
+    try:
+        with open(EVENT_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                producer.produce(KAFKA_TOPIC, line.strip(), callback=delivery_report)
+                producer.poll(0)
+    except FileNotFoundError:
+        print(f"Event file '{EVENT_FILE}' not found. Cannot produce events.")
+        return
+    except OSError as err:
+        print(f"Error processing event file '{EVENT_FILE}': {err}")
+        return
+
     producer.flush()
     print("Finished producing events")
 
