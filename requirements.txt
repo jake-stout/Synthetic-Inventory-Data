@@ -4,4 +4,4 @@ confluent-kafka
 pyflink
 python-dotenv
 fastapi
-uvicorn
+uvicorn[standard]
