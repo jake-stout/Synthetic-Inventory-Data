@@ -19,14 +19,14 @@ CREATE TABLE facilities (
 );
 
 CREATE TABLE users (
-    user_id SERIAL PRIMARY KEY,
+    user_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR NOT NULL,
     email VARCHAR UNIQUE NOT NULL,
     role VARCHAR
 );
 
 CREATE TABLE vendors (
-    vendor_id SERIAL PRIMARY KEY,
+    vendor_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR NOT NULL,
     address TEXT,
     contact_email VARCHAR
