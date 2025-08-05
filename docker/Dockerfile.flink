@@ -1,0 +1,6 @@
+FROM flink:1.17.1-scala_2.12-java11
+USER root
+COPY requirements.txt /opt/requirements.txt
+RUN pip install --no-cache-dir -r /opt/requirements.txt
+COPY scripts/flink_inventory_processor.py /opt/
+ENTRYPOINT ["flink", "run", "-m", "jobmanager:8081", "-py", "/opt/flink_inventory_processor.py"]

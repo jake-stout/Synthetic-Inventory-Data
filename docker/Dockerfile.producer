@@ -1,0 +1,6 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY scripts/ ./scripts/
+ENTRYPOINT ["sh", "-c", "python scripts/generate_synthetic_data.py && python scripts/produce_inventory_events.py"]
