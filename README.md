@@ -19,6 +19,9 @@ maintains an inventory-on-hand table by consuming those events.
    ```
    This launches PostgreSQL, Kafka, Zookeeper, and the Flink services.
 
+   PGAdmin is also available at [http://localhost:5050](http://localhost:5050)
+   with the default email `admin@admin.com` and password `admin`.
+
 2. Generate sample data and load it into PostgreSQL:
    ```bash
    docker-compose run --rm producer python scripts/generate_synthetic_data.py
