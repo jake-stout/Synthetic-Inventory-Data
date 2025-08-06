@@ -13,11 +13,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = int(os.getenv("DB_PORT", "5432"))
+DB_PORT = int(os.getenv("DB_PORT", "54321"))
 DB_NAME = os.getenv("DB_NAME", "inventory")
 DB_USER = os.getenv("DB_USER", "inventory")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "inventory")
 EVENT_FILE = os.getenv("EVENT_FILE", "inventory_events.json")
+
+print(f"Connecting to {DB_HOST}:{DB_PORT} as {DB_USER} to DB {DB_NAME}")
+
 
 fake = Faker()
 random.seed(42)
